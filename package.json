@@ -1,0 +1,26 @@
+{
+  "name": "process-tree-kit",
+  "version": "0.1.0",
+  "description": "Parse flat ps-style process listings into a navigable tree, from a file or stdin.",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p ."
+  },
+  "keywords": [
+    "process",
+    "process-tree",
+    "ps",
+    "stdin"
+  ],
+  "license": "MIT",
+  "author": "ian-d2",
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0"
+  }
+}
