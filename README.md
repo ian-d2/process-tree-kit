@@ -76,6 +76,15 @@ ps -eo pid,ppid,command | node your-script.js
 `parseProcessList` skips the header row and any line that doesn't match
 `PID PPID COMMAND...`, so both forms of input work without preprocessing.
 
+## Development
+
+```sh
+npm test
+```
+
+Runs the `parseProcessList` and `buildProcessTree` unit tests through
+Node's built-in test runner. No test framework dependency required.
+
 ## Status
 
 Early skeleton. Parsing, tree building, and ASCII rendering work; nothing
