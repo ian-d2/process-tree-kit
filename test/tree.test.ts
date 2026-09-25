@@ -1,6 +1,12 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseProcessList, buildProcessTree } from "../src/tree.js";
+import {
+  parseProcessList,
+  buildProcessTree,
+  findNode,
+  getAncestors,
+  getDescendants,
+} from "../src/tree.js";
 
 test("parseProcessList", async (t) => {
   await t.test("parses pid, ppid, and command from a line", () => {
@@ -90,5 +96,65 @@ test("buildProcessTree", async (t) => {
 
   await t.test("returns an empty forest for empty input", () => {
     assert.deepEqual(buildProcessTree([]), []);
+  });
+});
+
+function sampleTree() {
+  return buildProcessTree([
+    { pid: 1, ppid: 0, command: "init" },
+    { pid: 455, ppid: 1, command: "sshd" },
+    { pid: 981, ppid: 455, command: "sshd: user@pts/0" },
+    { pid: 982, ppid: 981, command: "-zsh" },
+    { pid: 120, ppid: 1, command: "systemd-journald" },
+  ]);
+}
+
+test("findNode", async (t) => {
+  await t.test("finds a root node", () => {
+    assert.equal(findNode(sampleTree(), 1)?.command, "init");
+  });
+
+  await t.test("finds a deeply nested node", () => {
+    assert.equal(findNode(sampleTree(), 982)?.command, "-zsh");
+  });
+
+  await t.test("returns undefined for a pid not in the tree", () => {
+    assert.equal(findNode(sampleTree(), 999), undefined);
+  });
+});
+
+test("getAncestors", async (t) => {
+  await t.test("lists ancestors root-first", () => {
+    const ancestors = getAncestors(sampleTree(), 982);
+    assert.deepEqual(
+      ancestors.map((node) => node.pid),
+      [1, 455, 981],
+    );
+  });
+
+  await t.test("returns an empty array for a root node", () => {
+    assert.deepEqual(getAncestors(sampleTree(), 1), []);
+  });
+
+  await t.test("returns an empty array for a pid not in the tree", () => {
+    assert.deepEqual(getAncestors(sampleTree(), 999), []);
+  });
+});
+
+test("getDescendants", async (t) => {
+  await t.test("lists descendants in depth-first order", () => {
+    const descendants = getDescendants(sampleTree(), 1);
+    assert.deepEqual(
+      descendants.map((node) => node.pid),
+      [455, 981, 982, 120],
+    );
+  });
+
+  await t.test("returns an empty array for a leaf node", () => {
+    assert.deepEqual(getDescendants(sampleTree(), 982), []);
+  });
+
+  await t.test("returns an empty array for a pid not in the tree", () => {
+    assert.deepEqual(getDescendants(sampleTree(), 999), []);
   });
 });

@@ -57,6 +57,60 @@ export function buildProcessTree(records: ProcessRecord[]): ProcessNode[] {
   return roots;
 }
 
+/**
+ * Finds the node for a given pid anywhere in the forest, or undefined if no
+ * process with that pid was in the input. Walks the tree rather than
+ * requiring callers to keep their own pid index around.
+ */
+export function findNode(nodes: ProcessNode[], pid: number): ProcessNode | undefined {
+  for (const node of nodes) {
+    if (node.pid === pid) return node;
+    const found = findNode(node.children, pid);
+    if (found) return found;
+  }
+  return undefined;
+}
+
+/**
+ * Returns the chain of nodes from the root down to (but not including) the
+ * node with the given pid, ordered root-first. Empty if the pid isn't
+ * present or is itself a root.
+ */
+export function getAncestors(nodes: ProcessNode[], pid: number): ProcessNode[] {
+  const path: ProcessNode[] = [];
+
+  const walk = (candidates: ProcessNode[]): boolean => {
+    for (const node of candidates) {
+      if (node.pid === pid) return true;
+      path.push(node);
+      if (walk(node.children)) return true;
+      path.pop();
+    }
+    return false;
+  };
+
+  return walk(nodes) ? path : [];
+}
+
+/**
+ * Returns every node reachable below the node with the given pid, in
+ * depth-first order. Empty if the pid isn't present or has no children.
+ */
+export function getDescendants(nodes: ProcessNode[], pid: number): ProcessNode[] {
+  const start = findNode(nodes, pid);
+  if (!start) return [];
+
+  const descendants: ProcessNode[] = [];
+  const walk = (node: ProcessNode) => {
+    for (const child of node.children) {
+      descendants.push(child);
+      walk(child);
+    }
+  };
+  walk(start);
+  return descendants;
+}
+
 /** Renders a forest as a `tree`-style ASCII diagram, one line per process. */
 export function renderTree(nodes: ProcessNode[]): string {
   const lines: string[] = [];

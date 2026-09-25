@@ -58,6 +58,24 @@ PID   PPID  COMMAND
         └── -zsh (982)
 ```
 
+## Lookups
+
+Once you have a forest, `findNode`, `getAncestors`, and `getDescendants` save
+you from walking it by hand:
+
+```ts
+import { findNode, getAncestors, getDescendants } from "process-tree-kit";
+
+const shell = findNode(roots, 982); // -zsh
+
+getAncestors(roots, 982).map((n) => n.pid); // [1, 455, 981]
+getDescendants(roots, 455).map((n) => n.pid); // [981, 982]
+```
+
+`getAncestors` returns the chain from the root down to (but not including)
+the target pid. `getDescendants` returns everything below it, depth-first.
+Both return an empty array if the pid isn't in the tree.
+
 ## Capturing input
 
 To feed this from a live system, either save a snapshot:
@@ -82,13 +100,13 @@ ps -eo pid,ppid,command | node your-script.js
 npm test
 ```
 
-Runs the `parseProcessList` and `buildProcessTree` unit tests through
-Node's built-in test runner. No test framework dependency required.
+Runs the unit tests through Node's built-in test runner. No test framework
+dependency required.
 
 ## Status
 
-Early skeleton. Parsing, tree building, and ASCII rendering work; nothing
-else does yet. Not published to npm.
+Early skeleton. Parsing, tree building, ASCII rendering, and the pid lookup
+helpers work; nothing else does yet. Not published to npm.
 
 ## License
 
